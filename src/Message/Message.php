@@ -5,15 +5,32 @@ namespace Proengeno\Edifact\Message;
 use ReflectionClass;
 use Proengeno\Edifact\Interfaces\MessageInterface;
 
+/**
+ * A EDIFACT message.
+ *
+ */
 class Message implements MessageInterface
 {
-    protected $ediMessage;
+	
+	/**
+	 * An EDIFACT-Message
+	 * @var MessageInterface
+	 */    
+	protected $ediMessage;
     
+    /**
+     * Constructor
+     * @param MessageInterface $ediMessage an existing EDIFACT-Message to use.
+     */
     public function __construct(MessageInterface $ediMessage)
     {
         $this->ediMessage = $ediMessage;
     }
 
+    /**
+     * Gets the short name of this object.
+     * @return string the short name of this object
+     */
     public function getAdapterName()
     {
         return (new ReflectionClass($this->ediMessage))->getShortName();
