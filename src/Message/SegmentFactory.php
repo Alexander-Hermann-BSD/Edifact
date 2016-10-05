@@ -2,7 +2,7 @@
 
 namespace Proengeno\Edifact\Message;
 
-use Proengeno\Edifact\Test\Fixtures\Segment;
+use Proengeno\Edifact\Interfaces\SegInterface;
 
 /**
  * A factory to generate Segments
@@ -26,9 +26,9 @@ class SegmentFactory
     
     /**
      * A function that returns a segment from a given segment and a given segment linenumber.
-     * @param Segment $segment
+     * @param SegInterface $segment
      * @param int $segline
-     * @return Segment
+     * @return SegInterface
      */
     public function fromSegline($segment, $segline)
     {
@@ -40,10 +40,10 @@ class SegmentFactory
 
     /**
      * A function that returns a Segment from a given segment with given attributes.
-     * @param Segment $segment
+     * @param SegInterface $segment
      * @param array[optional] $attributes default is an empty array
      * @param string $method the method to use; default = 'fromAttributes'
-     * @return Segment
+     * @return SegInterface
      */
     public function fromAttributes($segment, $attributes = [], $method = 'fromAttributes')
     {
