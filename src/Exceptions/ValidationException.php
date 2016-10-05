@@ -2,7 +2,6 @@
 
 namespace Proengeno\Edifact\Exceptions;
 
-use spec\Prophecy\Util\StringUtilSpec;
 use Proengeno\Edifact\Test\Fixtures\Segment;
 
 /**
