@@ -4,6 +4,9 @@ namespace Proengeno\Edifact\Interfaces;
 
 use Proengeno\Edifact\Message\Delimiter;
 
+/**
+ * An interface for segments.
+ */
 interface SegInterface {
     public static function fromSegLine($segLine);
     public static function setBuildDelimiter(Delimiter $delimiter);

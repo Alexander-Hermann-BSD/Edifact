@@ -6,11 +6,35 @@ use Proengeno\Edifact\Exceptions\ValidationException;
 
 class Blueprint
 {
+	/**
+	 * 
+	 * @var integer
+	 */
     private $loopDeep = 0;
+    /**
+     * 
+     * @var array
+     */
     private $blueprint = [];
+    /**
+     * 
+     * @var array
+     */
     private $loopLevelCount = [];
+    /**
+     * 
+     * @var array
+     */
     private $blueprintCount = [];
+    /**
+     * 
+     * @var string
+     */
     private $loopIsNecessary = true;
+    /**
+     * 
+     * @var unknown
+     */
     private $optinalSegmentException;
     
     public function __construct($blueprint)
@@ -59,6 +83,10 @@ class Blueprint
         throw ValidationException::unexpectedSegment('', @$segment->name(), $this->getBlueprintAttribute('name'));
     }
 
+    /**
+     * 
+     * @param Segment $segment
+     */
     private function validateBlueprintTemplates($segment)
     {
         if ($this->getBlueprintAttribute('templates')) {
@@ -72,6 +100,13 @@ class Blueprint
         }
     }
 
+    /**
+     * Flattens a blueprint
+     * 
+     * @param array $blueprint
+     * @param number $nestedDeep
+     * @param number $levelCount
+     */
     private function flattenBlueprint($blueprint, $nestedDeep = 0, $levelCount = 0)
     {
         $levelCounter = 0;

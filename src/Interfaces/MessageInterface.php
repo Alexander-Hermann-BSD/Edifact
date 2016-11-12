@@ -7,6 +7,9 @@ use Iterator;
 use Proengeno\Edifact\Message\EdifactFile;
 use Proengeno\Edifact\Interfaces\SegInterface;
 
+/**
+ * An interface for an EDIFACT message.
+ */
 interface MessageInterface extends Iterator
 {
     public function getValidationBlueprint();
