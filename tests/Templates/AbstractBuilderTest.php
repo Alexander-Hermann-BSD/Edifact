@@ -3,6 +3,7 @@
 namespace Proengeno\Edifact\Test\Templates;
 
 use Proengeno\Edifact\Test\TestCase;
+use Proengeno\Edifact\Configuration;
 use Proengeno\Edifact\Message\Message;
 use Proengeno\Edifact\Message\Delimiter;
 use Proengeno\Edifact\Message\EdifactFile;
@@ -11,14 +12,14 @@ use Proengeno\Edifact\Templates\AbstractBuilder;
 use Proengeno\Edifact\Exceptions\EdifactException;
 use Proengeno\Edifact\Exceptions\ValidationException;
 
-class AbstractBuilderTest extends TestCase 
+class AbstractBuilderTest extends TestCase
 {
     private $builder;
     private $file;
 
     public function setUp()
     {
-        $this->builder = new Builder('from', 'to');
+        $this->builder = new Builder('to', null, $this->getConfiguration());
         $this->file = $this->builder->getEdifactFile();
     }
 
@@ -40,7 +41,7 @@ class AbstractBuilderTest extends TestCase
     /** @test */
     public function it_deletes_the_file_if_the_building_was_interrupted()
     {
-        $builder = new Builder('from', 'to', tempnam(sys_get_temp_dir(), 'edifFile'));
+        $builder = new Builder('to', tempnam(sys_get_temp_dir(), 'edifFile'));
         $file = $builder->getEdifactFile();
         $filepath = $file->getRealPath();
         $this->assertFileExists($filepath);
@@ -59,33 +60,20 @@ class AbstractBuilderTest extends TestCase
     /** @test */
     public function it_provides_the_unb_ref()
     {
-        $this->assertEquals('unique_id', $this->builder->unbReference());
+        $this->assertTrue(ctype_xdigit($this->builder->unbReference()));
     }
 
     /** @test */
     public function it_provides_a_configurable_pre_build_configuration()
     {
         $ownRef = 'OWN_REF';
-        $this->builder->addPrebuildConfig('unbReference', $ownRef);
-        $this->assertEquals($ownRef, $this->builder->unbReference());
-    }
-
-    /** @test */
-    public function it_provides_a_configurable_pre_build_configuration_over_closures()
-    {
-        $ownRef = 'OWN_REF';
-        $this->builder->addPrebuildConfig('unbReference', function() use ($ownRef) {
+        $configuration = new Configuration;
+        $configuration->setUnbRefGenerator(function() use ($ownRef) {
             return $ownRef;
         });
-        $this->assertEquals($ownRef, $this->builder->unbReference());
-    }
 
-    /** @test */
-    public function it_builds_with_the_configurable_delimiter()
-    {
-        $this->builder->addPrebuildConfig('delimiter', function() {
-            return new Delimiter;
-        });
+        $builder = new Builder('to', 'php://temp', $configuration);
+        $this->assertEquals($ownRef, $builder->unbReference());
     }
 
     /** @test */
@@ -102,9 +90,9 @@ class AbstractBuilderTest extends TestCase
         $this->builder->addMessage([]);
         $message = $this->builder->get();
         $this->assertStringStartsWith("UNA:+.? 'UNB+UNOC:3+from:500+to:500", (string)$message);
-        $this->assertStringEndsWith("UNZ+1+unique_id'", (string)$message);
+        $this->assertStringEndsWith("UNZ+1+" . $this->builder->unbReference() . "'", (string)$message);
     }
-    
+
     /** @test */
     public function it_runs_validation_before_it_provides_the_message()
     {
@@ -121,14 +109,14 @@ class AbstractBuilderTest extends TestCase
         foreach (range(1, $messageCount) as $i ) {
             $this->builder->addMessage(['']);
         }
-        
+
         $this->assertEquals($messageCount, $this->builder->messageCount());
 
         return $this->builder;
     }
 
-    /** 
-     * @test 
+    /**
+     * @test
      * @depends it_provides_the_messages_count
      */
     public function it_counts_the_given_messages_and_writes_the_right_unz_segment($builder)
@@ -137,23 +125,6 @@ class AbstractBuilderTest extends TestCase
 
         $message = $builder->get();
         $this->assertStringStartsWith("UNA:+.? 'UNB+UNOC:3+from:500+to:500", (string)$message);
-        $this->assertStringEndsWith("UNZ+" . $messageCount . "+unique_id'", (string)$message);
+        $this->assertStringEndsWith("UNZ+" . $messageCount . "+" . $builder->unbReference() . "'", (string)$message);
     }
-
-    /** @test */
-    public function it_throws_an_expection_if_pre_build_config_was_addet_while_building_process_has_begun()
-    {
-        $ownRef = 'OWN_REF';
-        $this->builder->unbReference();
-        $this->expectException(EdifactException::class);
-        $this->builder->addPrebuildConfig('unbReference', function() use ($ownRef) {
-            return $ownRef;
-        });
-    }
-}
-
-namespace Proengeno\Edifact\Templates;
-
-function uniqid($prefix = null) {
-    return $prefix . 'unique_id';
 }

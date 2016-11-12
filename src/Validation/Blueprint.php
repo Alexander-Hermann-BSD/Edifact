@@ -36,7 +36,7 @@ class Blueprint
      * @var unknown
      */
     private $optinalSegmentException;
-    
+
     public function __construct($blueprint)
     {
         $this->flattenBlueprint($blueprint);
@@ -47,13 +47,14 @@ class Blueprint
         validationStart:
         if ($this->unnecessarySegmentIsMissing($segment) || $this->unnecessaryLoopIsMissing($segment)) {
             $this->countUpBlueprint();
+            goto validationStart;
         }
-        
+
         if ($this->startOfLoop()) {
             $this->nextLoop();
         } elseif ($this->startOfReLoop($segment)) {
             $this->reLoop();
-        } 
+        }
 
         if ($this->endOfLoop()) {
             $this->previosLoop();
@@ -146,7 +147,7 @@ class Blueprint
 
     private function endOfLoop()
     {
-        $segmentCount = isset($this->blueprint[$this->loopDeep][$this->getLevelLoopCount()]) 
+        $segmentCount = isset($this->blueprint[$this->loopDeep][$this->getLevelLoopCount()])
             ? count($this->blueprint[$this->loopDeep][$this->getLevelLoopCount()])
             : 0;
         return $this->getBlueprintCount() >= $segmentCount;
@@ -181,7 +182,7 @@ class Blueprint
         }
         $this->loopLevelCount[$this->loopDeep]++;
     }
-    
+
     private function getLevelLoopCount()
     {
         if (!isset($this->loopLevelCount[$this->loopDeep])) {
@@ -198,7 +199,7 @@ class Blueprint
         }
         if (isset($this->blueprint[$this->loopDeep][$this->getLevelLoopCount()][$blueprintCount][$attribute])) {
             return $this->blueprint[$this->loopDeep][$this->getLevelLoopCount()][$blueprintCount][$attribute];
-        }        
+        }
         return null;
     }
 

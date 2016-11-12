@@ -1,9 +1,9 @@
-<?php 
+<?php
 
 namespace Proengeno\Edifact\Templates;
 
 use Closure;
-use Proengeno\Edifact\Message\Delimiter;
+use Proengeno\Edifact\Configuration;
 use Proengeno\Edifact\Message\EdifactFile;
 use Proengeno\Edifact\Message\SegmentFactory;
 use Proengeno\Edifact\Validation\MessageValidator;
@@ -15,38 +15,52 @@ use Proengeno\Edifact\Interfaces\MessageValidatorInterface;
 
 abstract class AbstractMessage implements MessageInterface
 {
-    protected $configuration = [];
+    protected static $segments;
+    protected static $blueprint;
+
+    protected $configuration;
 
     private $file;
-    private $validator;
     private $pinnedPointer;
     private $currentSegment;
     private $segmentFactory;
     private $currentSegmentNumber = 0;
-    
-    public function __construct(EdifactFile $file, MessageValidatorInterface $validator = null)
+
+    public function __construct(EdifactFile $file, Configuration $configuration = null)
     {
         $this->file = $file;
-        $this->validator = $validator ?: new MessageValidator;
-        $this->segmentFactory = new SegmentFactory($this->getDelimiter());
-        $this->setConfigDefaults();
+        $this->configuration = $configuration ?: new Configuration;
+        $this->segmentFactory = new SegmentFactory(
+            $this->configuration->getSegmentNamespace(),
+            $this->getDelimiter()
+        );
     }
 
-    public static function getSegmentClass($segmentName)
+    public static function fromFilepath($string, Configuration $configuration = null)
     {
-        $segmentName = strtoupper($segmentName);
-        if (isset(static::$segments[$segmentName])) {
-            return static::$segments[$segmentName];
+        return new static(new EdifactFile($string), $configuration);
+    }
+
+    public static function fromString($string, Configuration $configuration = null)
+    {
+        return new static(EdifactFile::fromString($string), $configuration);
+    }
+
+    public function getConfiguration($key)
+    {
+        $method = 'get' . ucfirst($key);
+        if (method_exists($this->configuration, $method)) {
+            return $this->configuration->$method();
         }
 
-        throw EdifactException::segmentUnknown($segmentName);
+        throw new EdifactException("Unknown Configuration '$key'.");
     }
 
-    abstract public function getValidationBlueprint();
-
-    public function addConfiguration($key, $config)
+    public function getValidationBlueprint()
     {
-        $this->configuration[$key] = $config;
+        if (static::$blueprint !== null) {
+            return static::$blueprint;
+        }
     }
 
     public function getFilepath()
@@ -61,16 +75,17 @@ abstract class AbstractMessage implements MessageInterface
         }
         return $this->currentSegment;
     }
-    
+
     public function getNextSegment()
     {
         $this->currentSegmentNumber++;
-        $segment = $this->file->getSegment();
+        $segLine = $this->file->getSegment();
 
-        if ($segment !== false) {
-            $segment = $this->currentSegment = $this->getSegmentObject($segment);
-        } 
-        return $segment;
+        if ($segLine == false) {
+            return false;
+        }
+
+        return $this->currentSegment = $this->getSegmentObject($segLine);
     }
 
     public function findSegmentFromBeginn($searchSegment, closure $criteria = null)
@@ -82,7 +97,8 @@ abstract class AbstractMessage implements MessageInterface
 
     public function findNextSegment($searchSegment, closure $criteria = null)
     {
-        $searchObject = static::getSegmentClass($searchSegment);
+        $searchObject = $this->segmentFactory->fromSegline($searchSegment);
+
         while ($segmentObject = $this->getNextSegment()) {
             if ($segmentObject instanceof $searchObject) {
                 if ($criteria && !$criteria($segmentObject)) {
@@ -111,11 +127,11 @@ abstract class AbstractMessage implements MessageInterface
 
         return $this->file->seek($pinnedPointer);
     }
-    
+
     public function validate()
     {
         $this->rewind();
-        $this->validator->validate($this);
+        $this->configuration->getMessageValidator()->validate($this);
         $this->rewind();
 
         return $this;
@@ -173,36 +189,8 @@ abstract class AbstractMessage implements MessageInterface
         return $this->file->__toString();
     }
 
-    protected function getConfiguration($key)
-    {
-        if (isset($this->configuration[$key]) && $this->configuration[$key] !== null) {
-            if (is_callable($this->configuration[$key])) {
-                return $this->configuration[$key]();
-            }
-            return $this->configuration[$key];
-        }
-
-        throw new EdifactException("Configuration $key not set.");
-    }
-
     protected function getSegmentObject($segLine)
     {
-        return $this->segmentFactory->fromSegline(static::getSegmentClass($this->getSegname($segLine)), $segLine);
-    }
-
-    private function setConfigDefaults()
-    {
-        foreach ($this->configuration as $configKey => $config) {
-            $methodName = 'getDefault' . ucfirst($configKey);
-
-            if (method_exists($this, $methodName)) {
-                $this->configuration[$configKey] = $this->$methodName();
-            }
-        }
-    }
-
-    private function getSegname($segLine) 
-    {
-        return substr($segLine, 0, 3);
+        return $this->segmentFactory->fromSegline($segLine);
     }
 }

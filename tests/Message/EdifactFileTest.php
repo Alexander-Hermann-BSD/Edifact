@@ -26,7 +26,7 @@ class EdifactFileTest extends TestCase
             unlink($this->tmpnam);
         }
     }
-    
+
     public function testCanInstantiateWithStreamIdentifier()
     {
         $this->assertInstanceOf('Proengeno\Edifact\Message\EdifactFile', $this->stream);
@@ -46,14 +46,13 @@ class EdifactFileTest extends TestCase
 
     public function testTerminateSegmentDelimiter()
     {
-        $message = "UNB'NAD+Up?'Verd'UNZ";
+        $message = "UNB'NAD+Up?'Verd?''UNZ";
         $this->stream->writeAndRewind($message);
 
         while (! $this->stream->eof()) {
             $string[] = $this->stream->getSegment();
         }
-
-        $this->assertEquals("NAD+Up'Verd", $string[1]);
+        $this->assertEquals("NAD+Up'Verd'", $string[1]);
     }
 
     public function testToStringRetrievesFullContentsOfStream()
@@ -109,7 +108,7 @@ class EdifactFileTest extends TestCase
         $string = "UNA:+.? 'UNB?'UNT'";
         file_put_contents($this->tmpnam, $string);
         $stream = new EdifactFile($this->tmpnam, 'r');
-        
+
         $stream->seek(0);
         $i = 0;
         while (isset($string[$i])) {

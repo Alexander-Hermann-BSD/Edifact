@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace Proengeno\Edifact\Interfaces;
 
@@ -13,7 +13,6 @@ use Proengeno\Edifact\Interfaces\SegInterface;
 interface MessageInterface extends Iterator
 {
     public function getValidationBlueprint();
-    public function addConfiguration($key, $config);
     public function getFilepath();
     public function getCurrentSegment();
     public function getNextSegment();
@@ -23,4 +22,4 @@ interface MessageInterface extends Iterator
     public function validate();
     public function getDelimiter();
     public function __toString();
-} 
+}

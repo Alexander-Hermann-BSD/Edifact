@@ -6,10 +6,11 @@ use Mockery as m;
 use Proengeno\Edifact\Test\TestCase;
 use Proengeno\Edifact\Message\Delimiter;
 use Proengeno\Edifact\Test\Fixtures\Segment;
+use Proengeno\Edifact\Exceptions\EdifactException;
 use Proengeno\Edifact\Validation\SegmentValidator;
 use Proengeno\Edifact\Interfaces\SegValidatorInterface;
 
-class AbstractSegmentTest extends TestCase 
+class AbstractSegmentTest extends TestCase
 {
     protected function setUp()
     {
@@ -103,6 +104,6 @@ class AbstractSegmentTest extends TestCase
         $expectedString = "A+B+1:2+D'";
 
         $segment = Segment::fromSegLine($givenString);
-        $this->assertEquals('B+', $segment->getB());
+        $this->assertEquals('B+', $segment->dummyMethod());
     }
 }

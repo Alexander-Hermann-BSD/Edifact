@@ -1,14 +1,16 @@
-<?php 
+<?php
 
 namespace Proengeno\Edifact\Templates;
 
 use Proengeno\Edifact\Message\Delimiter;
 use Proengeno\Edifact\Interfaces\SegInterface;
+use Proengeno\Edifact\Exceptions\EdifactException;
 use Proengeno\Edifact\Validation\SegmentValidator;
 use Proengeno\Edifact\Interfaces\SegValidatorInterface;
 
-abstract class AbstractSegment implements SegInterface 
+abstract class AbstractSegment implements SegInterface
 {
+    protected static $jsonDescribtion = null;
     protected static $buildValidator;
     protected static $buildDelimiter;
     protected $elements = [];
@@ -23,7 +25,7 @@ abstract class AbstractSegment implements SegInterface
         $this->validator = static::$buildValidator ?: new SegmentValidator;
     }
 
-    public static function fromSegLine($segLine) 
+    public static function fromSegLine($segLine)
     {
         return new static(static::mapToBlueprint($segLine));
     }
@@ -61,7 +63,7 @@ abstract class AbstractSegment implements SegInterface
     public function validate()
     {
         $this->validator->validate(static::$validationBlueprint, $this->elements);
-        
+
         return $this;
     }
 
@@ -74,23 +76,25 @@ abstract class AbstractSegment implements SegInterface
 
             $this->cache['segLine'] = implode($this->delimiter->getDataGroup(), $this->deleteEmptyArrayEnds($dataFields));
         }
-        
+
         return $this->cache['segLine'] . $this->delimiter->getSegment();
     }
 
     protected static function mapToBlueprint($segLine)
     {
-        $inputDataGroups = static::getBuildDelimiter()->explodeSegments($segLine);
-        $elements = [];
         $i = 0;
+        $elements = [];
+        $inputDataGroups = static::getBuildDelimiter()->explodeSegments($segLine);
         foreach (static::$validationBlueprint as $BpDataKey => $BPdataGroups) {
+            $inputElement = [];
             if (isset($inputDataGroups[$i])) {
                 $inputElement = static::getBuildDelimiter()->explodeElements($inputDataGroups[$i]);
-                $j = 0;
-                foreach ($BPdataGroups as $key => $value) {
-                    $elements[$BpDataKey][$key] = isset($inputElement[$j]) ? $inputElement[$j] : null;
-                    $j++;
-                }
+            }
+
+            $j = 0;
+            foreach ($BPdataGroups as $key => $value) {
+                $elements[$BpDataKey][$key] = isset($inputElement[$j]) ? $inputElement[$j] : null;
+                $j++;
             }
             $i++;
         }

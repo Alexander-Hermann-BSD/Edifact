@@ -7,6 +7,7 @@ use Proengeno\Edifact\EdifactBuilder;
 use Proengeno\Edifact\Test\Fixtures\Builder;
 use Proengeno\Edifact\Exceptions\EdifactException;
 use Proengeno\Edifact\Message\Message;
+use Proengeno\Edifact\Configuration;
 
 class EdifactBuilderTest extends TestCase
 {
@@ -14,7 +15,7 @@ class EdifactBuilderTest extends TestCase
 
     public function setUp()
     {
-        $this->edifactBuilder = new EdifactBuilder;
+        $this->edifactBuilder = new EdifactBuilder($this->getConfiguration());
     }
 
     /** @test */
@@ -26,7 +27,7 @@ class EdifactBuilderTest extends TestCase
     /** @test */
     public function it_resolves_the_given_builder_instace()
     {
-        $this->edifactBuilder->addBuilder('Message', Builder::class, 'from');
+        $this->edifactBuilder->addBuilder('Message', Builder::class);
         $this->edifactBuilder->build('Message', 'to');
     }
 
@@ -34,20 +35,26 @@ class EdifactBuilderTest extends TestCase
     public function it_build_the_file_in_memory_if_only_path_is_given()
     {
         $path = '/tmp';
+        $configuration = $this->getConfiguration();
+        $configuration->setFilePath($path);
 
-        $this->edifactBuilder->addBuilder('Message', Builder::class, 'from', '/tmp');
-        $file = $this->edifactBuilder->build('Message', 'to')->get();
-        
+        $edifactBuilder = new EdifactBuilder($configuration);
+
+        $edifactBuilder->addBuilder('Message', Builder::class);
+        $file = $edifactBuilder->build('Message', 'to')->get();
+
         $this->assertInstanceOf(Message::class, $file);
     }
 
     /** @test */
-    public function it_build_the_file_in_current_path_if_only_a_filname_was_given()
+    public function it_build_the_file_in_current_path_if_the_path_is_not_configured()
     {
         $filename = 'test.csv';
 
-        $this->edifactBuilder->addBuilder('Message', Builder::class, 'from');
-        $this->edifactBuilder->build('Message', 'to', 'test.csv')->get();
+        $edifactBuilder = new EdifactBuilder($this->getConfiguration());
+
+        $edifactBuilder->addBuilder('Message', Builder::class);
+        $edifactBuilder->build('Message', 'to', 'test.csv')->get();
 
         $this->assertFileExists($filename);
         @unlink($filename);
@@ -58,9 +65,12 @@ class EdifactBuilderTest extends TestCase
     {
         $path = '/tmp';
         $filename = 'test.csv';
+        $configuration = $this->getConfiguration();
+        $configuration->setFilePath($path);
 
-        $this->edifactBuilder->addBuilder('Message', Builder::class, 'from', '/tmp');
-        $this->edifactBuilder->build('Message', 'to', 'test.csv')->get();
+        $edifactBuilder = new EdifactBuilder($configuration);
+        $edifactBuilder->addBuilder('Message', Builder::class);
+        $edifactBuilder->build('Message', 'to', 'test.csv')->get();
 
         $this->assertFileExists($path . '/' . $filename);
         @unlink($path . '/' . $filename);
@@ -70,11 +80,15 @@ class EdifactBuilderTest extends TestCase
     public function it_forwards_the_prebuild_configuration_to_builder_class()
     {
         $ownRef = 'OWN_REF';
-        $this->edifactBuilder->addBuilder('Message', Builder::class, 'from');
-        $this->edifactBuilder->addPrebuildConfig('unbReference', function() use ($ownRef) {
+        $configuration = new Configuration;
+        $configuration->setUnbRefGenerator(function() use ($ownRef) {
             return $ownRef;
         });
-        $this->assertEquals($ownRef, $this->edifactBuilder->build('Message', 'to')->unbReference());
+
+        $edifactBuilder = new EdifactBuilder($configuration);
+        $edifactBuilder->addBuilder('Message', Builder::class);
+
+        $this->assertEquals($ownRef, $edifactBuilder->build('Message', 'to')->unbReference());
     }
 
     /** @test */

@@ -22,9 +22,8 @@ class Segment extends AbstractSegment
         ]);
     }
 
-    public function getB()
+    public function dummyMethod()
     {
         return @$this->elements['B']['B'] ?: null;
     }
 }
-    

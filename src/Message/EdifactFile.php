@@ -31,6 +31,7 @@ class EdifactFile extends SplFileInfo
      * @var Delimiter
      */
     private $delimiter;
+<<<<<<< HEAD
     
     /**
      * Constructor.
@@ -62,6 +63,10 @@ class EdifactFile extends SplFileInfo
      * @throws Exception if <b>$open_mode</b> is not a string
      */
     public function __construct($filename, $open_mode = 'r', $use_include_path = false) 
+=======
+
+    public function __construct($filename, $open_mode = 'r', $use_include_path = false)
+>>>>>>> Apfelfrisch/master
     {
         if (is_string($filename) && empty($filename)) {
             throw new RuntimeException(__METHOD__ . "({$filename}): Filename cannot be empty");
@@ -78,11 +83,22 @@ class EdifactFile extends SplFileInfo
         }
     }
 
+<<<<<<< HEAD
     /**
      * 
      * {@inheritDoc}
      * @see SplFileInfo::__toString()
      */
+=======
+    public function fromString($string)
+    {
+        $instance = new self('php://temp', 'w+');
+        $instance->writeAndRewind($string);
+
+        return $instance;
+    }
+
+>>>>>>> Apfelfrisch/master
     public function __toString()
     {
         try {
@@ -102,6 +118,7 @@ class EdifactFile extends SplFileInfo
         return trim(stream_get_contents($this->rsrc));
     }
 
+<<<<<<< HEAD
     /**
      * Gets information if end of file is reached or not.
      * @return boolean Returns <b>TRUE</b> if the file pointer is at EOF or an error occurs (including socket timeout); otherwise returns <b>FALSE</b>.
@@ -136,24 +153,43 @@ class EdifactFile extends SplFileInfo
      * @return string|mixed
      */
     public function getSegment() 
+=======
+    public function eof()
+    {
+        return feof($this->rsrc);
+    }
+
+    public function flush()
+    {
+        return fflush($this->rsrc);
+    }
+
+    public function getChar()
+    {
+        return fgetc($this->rsrc);
+    }
+
+    public function getSegment()
+>>>>>>> Apfelfrisch/master
     {
         return $this->fetchSegment();
     }
-    
-    public function lock($operation, &$wouldblock = false) 
+
+    public function lock($operation, &$wouldblock = false)
     {
         return flock($this->rsrc, $operation, $wouldblock);
     }
-    
-    public function passthru() 
+
+    public function passthru()
     {
         return fpassthru($this->rsrc);
     }
-    
-    public function read($length) 
+
+    public function read($length)
     {
         return fread($this->rsrc, $length);
     }
+<<<<<<< HEAD
     
     /**
      * Seeks
@@ -173,6 +209,10 @@ class EdifactFile extends SplFileInfo
      * @link http://www.php.net/manual/en/function.fseek.php  
      */
     public function seek($offset, $whence = SEEK_SET) 
+=======
+
+    public function seek($offset, $whence = SEEK_SET)
+>>>>>>> Apfelfrisch/master
     {
     	  $result = fseek($this->rsrc, $offset, $whence);
         if (0 == $result) {
@@ -180,6 +220,7 @@ class EdifactFile extends SplFileInfo
         }
         return false;
     }
+<<<<<<< HEAD
     
     /**
      * Gets information about the file.
@@ -206,6 +247,20 @@ class EdifactFile extends SplFileInfo
      * @param string $str
      */
     public function write($str) 
+=======
+
+    public function stat()
+    {
+        return fstat($this->rsrc);
+    }
+
+    public function tell()
+    {
+        return ftell($this->rsrc);
+    }
+
+    public function write($str)
+>>>>>>> Apfelfrisch/master
     {
         fwrite($this->rsrc, $str);
     }
@@ -231,6 +286,7 @@ class EdifactFile extends SplFileInfo
         }
         return $this->delimiter;
     }
+<<<<<<< HEAD
     
 	 /**
 	  * rewind to start point
@@ -245,6 +301,14 @@ class EdifactFile extends SplFileInfo
      * 
      * @return string|mixed|string the next segment or FALSE
      */
+=======
+
+    public function rewind()
+    {
+        rewind($this->rsrc);
+    }
+
+>>>>>>> Apfelfrisch/master
     private function fetchSegment()
     {
         $mergedLines = '';
@@ -266,7 +330,7 @@ class EdifactFile extends SplFileInfo
             return $mergedLines . $line;
         }
 
-        return $line;
+        return $mergedLines;
     }
 
     /**
@@ -277,12 +341,16 @@ class EdifactFile extends SplFileInfo
     {
         return stream_get_line($this->rsrc, 0, $this->getDelimiter()->getSegment());
     }
+<<<<<<< HEAD
     
     /**
      * Gives information, if the given line was terminated or not. 
      * @param string $line given line
      * @return boolean true, if the given line was terminated; else false
      */
+=======
+
+>>>>>>> Apfelfrisch/master
     private function delimiterWasTerminated($line)
     {
         return $line[(strlen($line) - 1)] == $this->getDelimiter()->getTerminator();
